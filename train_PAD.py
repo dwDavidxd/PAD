@@ -51,7 +51,7 @@ parser.add_argument('--alpha', type=float, default=0.5, help='The weight that co
                                                              'Should be between 0 and 1')
 parser.add_argument('--vgg', type=str, default='checkpoint/style/vgg_normalised.pth')
 parser.add_argument('--decoder', type=str, default='checkpoint/style/decoder.pth')
-# parser.add_argument('--decoder', type=str, default='checkpoint/style/decoder.pth')
+# parser.add_argument('--decoder', type=str, default='checkpoint/style/decoder_128.pth')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=100, metavar='N',
