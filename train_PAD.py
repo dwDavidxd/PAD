@@ -108,6 +108,9 @@ def style_transfer_fun(vgg, decoder, data_inp, data_ref):
     data_ref = transforms.Resize((32, 32))(
         style_transfer(vgg, decoder, transforms.Resize((512, 512))(data_inp),
                        transforms.Resize((512, 512))(data_ref), args.alpha).detach())
+    # data_ref = transforms.Resize((32, 32))(style_transfer(vgg, decoder, transforms.Resize((128, 128))(data_inp),
+    #                             transforms.Resize((128, 128))(data_ref), args.alpha).detach()
+    
     return data_ref
 
 
@@ -117,8 +120,6 @@ def amplitude_replacement_style(data_inp, data_ref, vgg, decoder):
     data_ref = data_ref.clone().detach()
     with torch.no_grad():
         data_ref = style_transfer_fun(vgg, decoder, data_inp.detach(), data_ref.detach())
-        # data_ref = transforms.Resize((32, 32))(style_transfer(vgg, decoder, transforms.Resize((128, 128))(data_inp.detach()),
-        #                             transforms.Resize((128, 128))(data_ref.detach()), args.alpha).detach())
 
     torch.cuda.empty_cache()
 
