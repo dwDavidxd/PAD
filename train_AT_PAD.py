@@ -13,7 +13,7 @@ from torchvision import transforms
 import torch.backends.cudnn as cudnn
 import torch.fft as fft
 
-from torchattacks import PGD #, AutoAttack, CW
+from torchattacks import PGD, AutoAttack
 
 from models.resnet import ResNet18
 from models import net_style
@@ -51,7 +51,7 @@ parser.add_argument('--alpha', type=float, default=0.5, help='The weight that co
                                                              'Should be between 0 and 1')
 parser.add_argument('--vgg', type=str, default='checkpoint/style/vgg_normalised.pth')
 parser.add_argument('--decoder', type=str, default='checkpoint/style/decoder.pth')
-# parser.add_argument('--decoder', type=str, default='checkpoint/style/decoder_128.pth')
+# parser.add_argument('--decoder', type=str, default='checkpoint/style/decoder.pth')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=100, metavar='N',
@@ -102,6 +102,13 @@ def style_transfer(vgg, decoder, content, style, alpha=1.0,
         feat = adaptive_instance_normalization(content_f, style_f)
     feat = feat * alpha + content_f * (1 - alpha)
     return decoder(feat)
+  
+  
+def style_transfer_fun(vgg, decoder, data_inp, data_ref):
+    data_ref = transforms.Resize((32, 32))(
+        style_transfer(vgg, decoder, transforms.Resize((512, 512))(data_inp),
+                       transforms.Resize((512, 512))(data_ref), args.alpha).detach())
+    return data_ref
 
 
 def amplitude_replacement_style(data_inp, data_ref, vgg, decoder):
@@ -109,8 +116,7 @@ def amplitude_replacement_style(data_inp, data_ref, vgg, decoder):
     data_inp = data_inp.clone().detach()
     data_ref = data_ref.clone().detach()
     with torch.no_grad():
-        data_ref = transforms.Resize((32, 32))(style_transfer(vgg, decoder, transforms.Resize((512, 512))(data_inp.detach()),
-                                     transforms.Resize((512, 512))(data_ref.detach()), args.alpha).detach())
+        data_ref = style_transfer_fun(vgg, decoder, data_inp.detach(), data_ref.detach())
         # data_ref = transforms.Resize((32, 32))(style_transfer(vgg, decoder, transforms.Resize((128, 128))(data_inp.detach()),
         #                             transforms.Resize((128, 128))(data_ref.detach()), args.alpha).detach())
 
@@ -123,7 +129,7 @@ def amplitude_replacement_style(data_inp, data_ref, vgg, decoder):
     return data_inp
 
 
-def craft_adversarial_example(model, x_natural, y, step_size=2/255, epsilon=8/255, perturb_steps=10):
+def craft_adversarial_sample(model, x_natural, y, step_size=2/255, epsilon=8/255, perturb_steps=20):
 
     attack = PGD(model, eps=epsilon, alpha=step_size, steps=perturb_steps, random_start=True)
     x_adv = attack(x_natural, y)
@@ -132,11 +138,28 @@ def craft_adversarial_example(model, x_natural, y, step_size=2/255, epsilon=8/25
     attack  = AutoAttack(model, norm='Linf', eps=8/255, version='stand')
     x_adv = attack(x_natural, y)
     '''
+    return x_adv
+  
+  
+def craft_white_box_adversarial_sample(model, x_natural, x_ref, y, vgg, decoder, step_size=2/255, epsilon=8/255, perturb_steps=20):
 
-    '''
-    attack = CW(model, c=1, kappa=0, steps=200, lr=0.01)
-    x_adv = attack(x_natural, y)
-    '''
+    x_adv = x_natural.detach() + 0.001 * torch.randn(x_natural.shape).cuda().detach()
+
+    for _ in range(perturb_steps):
+
+        x_adv_pha = amplitude_replacement_style(x_adv, x_ref, vgg, decoder)
+
+        x_adv.requires_grad_()
+        x_adv_pha.requires_grad_()
+        with torch.enable_grad():
+            logits = model(x_adv_pha)
+            loss_ce = Fn.cross_entropy(logits, y)
+
+        grad = torch.autograd.grad(loss_ce, [x_adv_pha])[0]
+        x_adv = x_adv.detach() + step_size * torch.sign(grad.detach())
+        x_adv = torch.min(torch.max(x_adv, x_natural - epsilon), x_natural + epsilon)
+        x_adv = torch.clamp(x_adv, 0.0, 1.0)
+
     return x_adv
 
 
@@ -195,8 +218,10 @@ def eval_test(model, vgg, decoder, device, test_loader):
         pred = logits_out.max(1, keepdim=True)[1]
         correct += pred.eq(label.view_as(pred)).sum().item()
 
-        data_adv = craft_adversarial_example(model=model, x_natural=data, y=label,
-                                             step_size=2/255, epsilon=8/255, perturb_steps=20)
+        data_adv = craft_adversarial_sample(model=model, x_natural=data, y=label,
+                                             step_size=2/255, epsilon=8/255, perturb_steps=20) # general attack
+        
+       # data_adv = craft_white_box_adversarial_sample(model=model, x_natural=data, x_ref=data_ref, y=label, vgg=vgg, decoder=decoder, step_size=2/255, epsilon=8/255, perturb_steps=20) # white-box attack
 
         data_out = amplitude_replacement_style(data_adv, data_ref, vgg, decoder)
         logits_out = model(data_out)
