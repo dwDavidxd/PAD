@@ -3,7 +3,6 @@ import torch.utils.data as Data
 from PIL import Image
 import torch
 
-
 class data_dataset(Data.Dataset):
     def __init__(self, img_path, clean_label_path, transform=None):
         self.transform = transform
