@@ -22,7 +22,7 @@ from utils.data import data_dataset, data_dataset_with_ref
 from utils.function import adaptive_instance_normalization
 
 
-parser = argparse.ArgumentParser(description='PyTorch')
+parser = argparse.ArgumentParser(description='PyTorch PAD')
 
 parser.add_argument('--nat-img-train', type=str, help='natural training data', default='./data/train_images.npy')
 parser.add_argument('--nat-label-train', type=str, help='natural training label', default='./data/train_labels.npy')
