@@ -28,7 +28,7 @@ The training procedure of the Phase-aware Adversarial Defense (PAD). *Adv.*, *Na
 
 
 ## Requirements
-- This codebase is written for `python3` and 'pytorch'.
+- This codebase is written for `python3` and `pytorch`.
 - To install necessary python packages, run `pip install -r requirements.txt`.
 
 
@@ -42,13 +42,13 @@ The training procedure of the Phase-aware Adversarial Defense (PAD). *Adv.*, *Na
 To train the target model using PAD 
 
 ```
-python train_PAD.py --model-dir 'your checkpoint directory'
+python train_PAD.py --model_dir 'your checkpoint directory'
 ```
 
 To test the learned model
 
 ```
-python test_PAD.py --model-dir 'your checkpoint directory'
+python test_PAD.py --model_dir 'your checkpoint directory'
 ```
 
 
