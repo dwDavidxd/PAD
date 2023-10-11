@@ -34,7 +34,8 @@ The training procedure of the phase-aware adversarial defense. *Adv.*, *Nat.*, *
 
 ## Experiments
 ### Data
-- Please download and place all datasets into the data directory. 
+- Please download and place the dataset into the 'data' directory.
+- Please download and place the pre-trained style transfer model (vgg and decoder) into the './checkpoint/style' directory ([An example for the pre-trained style transfer model](https://drive.google.com/drive/folders/1s8yPdAtLkwxTePnWYTHvEN4OXauhg0HS?usp=drive_link)). 
 
 
 ### Training
