@@ -45,6 +45,8 @@ To train the target model using PAD
 python train_PAD.py --model_dir 'your checkpoint directory'
 ```
 
+
+### Test
 To test the learned model
 
 ```
