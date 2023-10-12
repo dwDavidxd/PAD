@@ -11,7 +11,7 @@ Deep neural networks have been found to be vulnerable to adversarial noise. Rece
 
 
 <p float="left" align="center">
-<img src="arch.png" width="800" /> 
+<img src="arch.png" width="600" /> 
 <figcaption align="center">
 The illustrations of the low-frequency component, highfrequency component and phase pattern. Nat. and Adv. samples denote natural and adversarial samples. The noise is crafted by PGD attack.
 </figcaption>
